@@ -26,11 +26,18 @@ public class TaskController {
         taskModel.setUserId((UUID) idUser);
 
         var currentDate = LocalDate.now();
+
         if (currentDate.isAfter(taskModel.getStartAt().toLocalDate()) || currentDate.isAfter(taskModel.getEndAt().toLocalDate())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de inicio / data de fim deve ser maior que a data atual");
         }
 
         if (taskModel.getStartAt().isAfter(taskModel.getEndAt())) {
+
+        if(currentDate.isAfter(taskModel.getStartAt().toLocalDate()) || currentDate.isAfter(taskModel.getEndAt().toLocalDate())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de inicio / data de fim deve ser maior que a data atual");
+        }
+
+        if(taskModel.getStartAt().isAfter(taskModel.getEndAt())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de inicio deve ser maior que a data atual");
         }
 
