@@ -1,6 +1,7 @@
 package br.com.luanmissel.todolist.task;
 
 
+import br.com.luanmissel.todolist.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,14 +34,11 @@ public class TaskController {
 
         if (taskModel.getStartAt().isAfter(taskModel.getEndAt())) {
 
-        if(currentDate.isAfter(taskModel.getStartAt().toLocalDate()) || currentDate.isAfter(taskModel.getEndAt().toLocalDate())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de inicio / data de fim deve ser maior que a data atual");
-        }
+            if (taskModel.getStartAt().isAfter(taskModel.getEndAt())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de inicio deve ser maior que a data atual");
+            }
 
-        if(taskModel.getStartAt().isAfter(taskModel.getEndAt())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de inicio deve ser maior que a data atual");
         }
-
         var task = this.iTaskRepository.save(taskModel);
         return ResponseEntity.status(HttpStatus.OK).body(task);
     }
@@ -53,9 +51,25 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public TaskModel update(@RequestBody TaskModel taskModel, HttpServletRequest request, @PathVariable UUID id) {
-        taskModel.setId(id);
-        this.iTaskRepository.save(taskModel);
-        return taskModel;
+    public ResponseEntity update(@RequestBody TaskModel taskModel, @PathVariable UUID id, HttpServletRequest request) {
+
+        var task = this.iTaskRepository.findById(id).orElse(null);
+
+        var idUser = request.getAttribute("idUser");
+
+        if (task == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task não encontrada");
+        }
+
+        if (!task.getUserId().equals(idUser)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("O usuário não tem permissão para alterar essa tarefa");
+        }
+
+        Utils.copyNonNullProperties(taskModel, task);
+        var taskUpdated = this.iTaskRepository.save(task);
+        return ResponseEntity.ok().body(taskUpdated);
+
     }
 }
+
